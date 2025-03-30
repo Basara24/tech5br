@@ -1,95 +1,167 @@
-import { Request, Response } from 'express';
-import UserModel from '../models/UserModel';
+import { Request, Response } from "express";
+import UserModel from "../models/UserModel";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 
-
-//acha todos os usuarios
+// Buscar todos os usuários (paginado)
 export const getAll = async (req: Request, res: Response) => {
-    const users = await UserModel.findAll();
-    res.send(users);
-}
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
 
+    const users = await UserModel.findAndCountAll({
+      limit: Number(limit),
+      offset,
+    });
 
-//acha um usuario pelo id
-export const getById = async (
-    req: Request <{id: number}>,
-    res: Response) => {
+    res.json({
+      total: users.count,
+      totalPages: Math.ceil(users.count / Number(limit)),
+      data: users.rows,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
-        const user = await UserModel.findByPk(req.params.id);
+// Buscar usuário por ID
+export const getById = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const user = await UserModel.findByPk(req.params.id);
 
-        return res.json(user);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-export const createUsers = async (req: Request, res: Response) => {
+    return res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
-    try{
-        
-     const { name } = req.body;
+// Criar usuário (cadastro)
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, cpf } = req.body;
 
-     if (!name || name === '') {
-            return res.status(400).json({ error: 'Name is required' });
-     }
-
-        const user = await UserModel.create({ name });
-        res.status(201).json(user);
-    }
-    catch(error){
-        console.log(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-
+    if (!name || !email || !password || !cpf) {
+      return res.status(400).json({ error: "All fields are required" });
     }
 
-}
-
-export const updateUser = async (
-     req: Request<{ id: string }>,
-     res: Response) => {
-
-    try{
-        
-     const { name } = req.body;
-
-     if (!name || name === '') {
-            return res.status(400).json({ error: 'Name is required' });
-     }
-     const user = await UserModel.findByPk(req.params.id);
-
-        if(!user){
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        user.name = name;
-
-        await user.save();
-        res.status(201).json(user);
-    }
-    catch(error){
-        console.log(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-
+    // Verificar se o e-mail já está cadastrado
+    const existingUser = await UserModel.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already in use" });
     }
 
-}
+    // Criptografar senha
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-// deleta um usuario pelo id
-export const destroyById = async (
-    req: Request <{id: string }>,
-    res: Response) => {
+    const user = await UserModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      cpf,
+      type: "usuario",
+      assinatura_status: null,
+    });
 
-        try{
-        const user = await UserModel.findByPk(req.params.id);
+    res.status(201).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
-        if(!user){
-            return res.status(404).json({ error: 'User not found' });
-        }
+// Atualizar usuário
+export const updateUser = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { name, password } = req.body;
 
-        await user.destroy();
-
-        return res.json(user);
-
-        res.status(204).send()
+    if (!name || !password) {
+      return res.status(400).json({ error: "All fields are required" });
     }
-    catch(error){
-        console.log(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+
+    const user = await UserModel.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
-}
+
+    // Atualizar nome
+    user.name = name;
+
+    // Atualizar senha criptografada
+    user.password = await bcrypt.hash(password, 10);
+
+    await user.save();
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Deletar usuário
+export const deleteUser = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const user = await UserModel.findByPk(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await user.destroy();
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Login de usuário e geração de token JWT
+export const loginUser = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const user = await UserModel.findOne({ where: { email } });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ id: user.id, type: user.type }, process.env.JWT_SECRET as string, {
+      expiresIn: "1h",
+    });
+
+    res.json({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Atualizar status de assinatura (tornar usuário organizador)
+export const updateSubscription = async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const user = await UserModel.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.type = "organizador";
+    user.assinatura_status = "ativa";
+    await user.save();
+
+    res.json({ message: "User upgraded to organizer", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
