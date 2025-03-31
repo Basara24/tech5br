@@ -2,6 +2,7 @@ import express from "express";
 import sequelize from "./config/database"; // Instância do Sequelize
 import userRoutes from "./routes/userRoutes";
 import eventsRoutes from "./routes/EventsRoutes";
+import SignatureRouter from "./routes/SignatureRoutes";
 
 const app = express();
 const port = 3000;
@@ -9,6 +10,7 @@ const port = 3000;
 app.use(express.json());
 app.use(userRoutes);
 app.use(eventsRoutes);
+app.use(SignatureRouter);
 
 sequelize
   .sync({ alter: true }) // Sincroniza o banco de dados
