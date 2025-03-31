@@ -1,6 +1,5 @@
-import { DataTypes, Model } from "sequelize";
-import sequelize from "../config/database";
-import EventsModel from "./EventsModel";
+import { Model, DataTypes } from "sequelize";
+import sequelize from "../config/database"; // Certifique-se de importar a instância correta do Sequelize
 
 class UserModel extends Model {
   public id!: number;
@@ -51,14 +50,10 @@ UserModel.init(
     },
   },
   {
-    sequelize,
+    sequelize,  // Agora a instância do sequelize é passada corretamente
     modelName: "UserModel",
     tableName: "users",
   }
 );
-
-// Relacionamento com Eventos (um organizador pode ter vários eventos)
-UserModel.hasMany(EventsModel, { foreignKey: "organizer_id", as: "eventos" });
-EventsModel.belongsTo(UserModel, { foreignKey: "organizer_id", as: "organizer" });
 
 export default UserModel;

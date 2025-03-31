@@ -1,6 +1,22 @@
 import { Request, Response } from "express";
 import EventsModel from "../models/EventsModel";
 import { authenticateToken } from "../middlewares/authMiddleware";
+import { upload } from "../middlewares/uploadMiddleware";
+
+// Upload de imagem para evento
+export const uploadEventImage = async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "Nenhuma imagem enviada." });
+        }
+
+        const imageUrl = `/uploads/${req.file.filename}`; // Caminho da imagem salva
+
+        res.json({ imageUrl });
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao fazer upload da imagem." });
+    }
+};
 
 // Lista todos os eventos
 export const getAllEvents = async (req: Request, res: Response) => {

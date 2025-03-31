@@ -1,29 +1,24 @@
-import express from 'express';
-import sequelize from './config/database';
-import userRoutes from './routes/userRoutes';
+import express from "express";
+import sequelize from "./config/database"; // Instância do Sequelize
+import userRoutes from "./routes/userRoutes";
+import eventsRoutes from "./routes/EventsRoutes";
+
 const app = express();
 const port = 3000;
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
 app.use(express.json());
 app.use(userRoutes);
-
-// sync database
+app.use(eventsRoutes);
 
 sequelize
-    .sync({ alter: true })
-    .then(() => {
-        console.log('Database pai ta on!!!');
-    })
+  .sync({ alter: true }) // Sincroniza o banco de dados
+  .then(() => {
+    console.log("Database pai ta on!!!");
+  })
+  .catch((error) => {
+    console.log("fudeu a baiana", error);
+  });
 
-    .catch((error) => {
-        console.log('fudeu a baiana', error)
-    });
-    
-
-app.listen(port, () =>{
-    console.log('Server is running on port ' + port);
+app.listen(port, () => {
+  console.log("Server is running on port " + port);
 });
