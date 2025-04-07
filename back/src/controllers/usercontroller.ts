@@ -77,7 +77,10 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 // Atualizar usuário
-export const updateUser = async (req: Request<{ id: string }>, res: Response) => {
+export const updateUser = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const { name, password } = req.body;
 
@@ -105,7 +108,10 @@ export const updateUser = async (req: Request<{ id: string }>, res: Response) =>
 };
 
 // Deletar usuário
-export const deleteUser = async (req: Request<{ id: string }>, res: Response) => {
+export const deleteUser = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const user = await UserModel.findByPk(req.params.id);
 
@@ -126,6 +132,8 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    console.log("📥 Login request:", req.body);
+
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
@@ -136,19 +144,24 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user.id, type: user.type }, process.env.JWT_SECRET as string, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { id: user.id, type: user.type },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1h" }
+    );
 
     res.json({ token });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Erro no login:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 // Atualizar status de assinatura (tornar usuário organizador)
-export const updateSubscription = async (req: Request<{ id: string }>, res: Response) => {
+export const updateSubscription = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const user = await UserModel.findByPk(req.params.id);
     if (!user) {

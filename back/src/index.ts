@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import sequelize from "./config/database"; // Instância do Sequelize
 import userRoutes from "./routes/userRoutes";

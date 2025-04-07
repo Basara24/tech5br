@@ -1,69 +1,67 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { api } from "../api/api";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [erro, setErro] = useState("");
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    senha: "",
+  });
+  const [erro, setErro] = useState("");
 
-  const validarEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErro("");
 
-    if (!validarEmail(email)) {
-      setErro("E-mail inválido");
-      return;
+    const { email, senha } = formData;
+
+    if (!email || !senha) {
+      return setErro("Preencha todos os campos.");
     }
 
     try {
-      const response = await api.post("/auth/login", { email, senha });
-      login(response.data.token);
-      navigate("/dashboard");
-    } catch (err) {
+      const response = await axios.post("http://localhost:3000/users/login", {
+        email,
+        password: senha, // precisa ser exatamente "password" como o backend espera
+      });
+
+      const { token } = response.data;
+
+      localStorage.setItem("token", token); // salva o token
+      navigate("/"); // redireciona após login (pode mudar a rota se quiser)
+    } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setErro(err.response?.data?.error || "Erro ao fazer login");
+        setErro(err.response?.data?.error || "Erro ao fazer login.");
       } else {
-        setErro("Erro inesperado ao fazer login");
+        setErro("Erro inesperado.");
       }
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleSubmit} className="flex flex-col w-80 gap-4">
-        <h1 className="text-2xl font-bold">Login</h1>
-
+    <div style={{ maxWidth: 400, margin: "auto" }}>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
         <input
           type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
         />
-
         <input
           type="password"
+          name="senha"
           placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
+          onChange={handleChange}
         />
-
-        {erro && <span className="text-red-500">{erro}</span>}
-
-        <button
-          type="submit"
-          className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-        >
-          Entrar
-        </button>
+        {erro && <p style={{ color: "red" }}>{erro}</p>}
+        <button type="submit">Entrar</button>
       </form>
     </div>
   );
