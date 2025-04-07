@@ -28,13 +28,16 @@ export default function Login() {
     try {
       const response = await axios.post("http://localhost:3000/users/login", {
         email,
-        password: senha, // precisa ser exatamente "password" como o backend espera
+        password: senha,
       });
 
       const { token } = response.data;
+      const payload = JSON.parse(atob(token.split(".")[1]));
 
-      localStorage.setItem("token", token); // salva o token
-      navigate("/"); // redireciona após login (pode mudar a rota se quiser)
+      localStorage.setItem("token", token);
+      localStorage.setItem("userType", payload.type); // <- isso é o que será usado na Home
+
+      navigate("/home");
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
         setErro(err.response?.data?.error || "Erro ao fazer login.");
