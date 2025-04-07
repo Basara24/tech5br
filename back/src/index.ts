@@ -5,8 +5,18 @@ import eventsRoutes from "./routes/EventsRoutes";
 import SignatureRouter from "./routes/SignatureRoutes";
 import RegistrationRouter from "./routes/ResgistrationRoutes";
 
+const cors = require("cors");
 const app = express();
 const port = 3000;
+
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Substitua pelo endereço do seu frontend
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // Se estiver lidando com cookies ou sessões
+    optionsSuccessStatus: 204,
+  })
+);
 
 app.use(express.json());
 app.use(userRoutes);

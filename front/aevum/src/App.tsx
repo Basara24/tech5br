@@ -1,19 +1,15 @@
-import { BrowserRouter, Route, Routes } from "react-router";
-import Home from "./pages/Home";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Pokedex from "./pages/Pokedex";
-import PokeInfo from "./pages/PokemonInfo.tsx";
+import Register from "./pages/resgister"; // <- certifique-se de importar
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login/:id" element={<Login />} />
-        <Route path="/pokedex" element={<Pokedex />} />
-        <Route path="/pokedex/:name" element={<PokeInfo />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} /> {/* <- aqui */}
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
