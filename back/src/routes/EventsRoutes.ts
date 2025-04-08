@@ -5,7 +5,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
-  uploadEventImage
+  uploadEventImage,
 } from "../controllers/EventsController";
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { upload } from "../middlewares/uploadMiddleware"; // Middleware para upload de imagens
@@ -19,7 +19,7 @@ router.get("/events", getAllEvents);
 router.get("/events/:id", getEventById);
 
 // Rota para criar um evento (organizador deve estar autenticado)
-router.post("/events", authenticateToken, createEvent);
+router.post("/events", authenticateToken, upload.single("image"), createEvent);
 
 // Rota para atualizar evento (apenas o organizador pode editar)
 router.put("/events/:id", authenticateToken, updateEvent);
