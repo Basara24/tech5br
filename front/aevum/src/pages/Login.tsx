@@ -36,6 +36,7 @@ export default function Login() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("userType", payload.type); // <- isso é o que será usado na Home
+      localStorage.setItem("userId", response.data.id);
 
       navigate("/home");
     } catch (err: any) {

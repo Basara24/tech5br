@@ -1,5 +1,11 @@
 import express from "express";
-import { createSignature, getUserSubscriptions, updateSignature, cancelSignature, checkSubscriptionStatus } from "../controllers/SignatureController"; // Importando os métodos do controller
+import {
+  createSignature,
+  getUserSubscriptions,
+  updateSignature,
+  cancelSignature,
+  checkSubscriptionStatus,
+} from "../controllers/SignatureController"; // Importando os métodos do controller
 import { authenticateToken } from "../middlewares/authMiddleware"; // Importando o middleware de autenticação
 
 const SignatureRouter = express.Router();
@@ -8,7 +14,11 @@ const SignatureRouter = express.Router();
 SignatureRouter.post("/signature", authenticateToken, createSignature); // Middleware de autenticação
 
 // Rota para listar assinaturas de um usuário - Usuário autenticado
-SignatureRouter.get("/subscriptions/:user_id", authenticateToken, getUserSubscriptions); // Middleware de autenticação
+SignatureRouter.get(
+  "/subscriptions/:user_id",
+  authenticateToken,
+  getUserSubscriptions
+); // Middleware de autenticação
 
 // Rota para atualizar uma assinatura (renovação) - Usuário autenticado
 SignatureRouter.put("/signature/:id", authenticateToken, updateSignature); // Middleware de autenticação
@@ -17,6 +27,10 @@ SignatureRouter.put("/signature/:id", authenticateToken, updateSignature); // Mi
 SignatureRouter.delete("/signature/:id", authenticateToken, cancelSignature); // Middleware de autenticação
 
 // Rota para verificar o status da assinatura - Usuário autenticado
-SignatureRouter.get("/subscription/status/:user_id", authenticateToken, checkSubscriptionStatus); // Middleware de autenticação
+SignatureRouter.get(
+  "/subscription/status/:user_id",
+  authenticateToken,
+  checkSubscriptionStatus
+); // Middleware de autenticação
 
 export default SignatureRouter;
