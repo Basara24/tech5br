@@ -85,12 +85,14 @@ export const updateUser = async (
     const { name, password } = req.body;
 
     if (!name || !password) {
-      return res.status(400).json({ error: "All fields are required" });
+      return res
+        .status(400)
+        .json({ error: "Todos os campos são obrigatórios" });
     }
 
     const user = await UserModel.findByPk(req.params.id);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
     // Atualizar nome
@@ -103,7 +105,7 @@ export const updateUser = async (
     res.status(200).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 };
 

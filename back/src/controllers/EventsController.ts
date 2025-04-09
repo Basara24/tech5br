@@ -3,8 +3,13 @@ import EventsModel from "../models/EventsModel";
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { upload } from "../middlewares/uploadMiddleware";
 
+// Estender a interface Request para incluir a propriedade file
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
 // Upload de imagem para evento
-export const uploadEventImage = async (req: Request, res: Response) => {
+export const uploadEventImage = async (req: MulterRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "Nenhuma imagem enviada." });
@@ -18,44 +23,14 @@ export const uploadEventImage = async (req: Request, res: Response) => {
   }
 };
 
-// Lista todos os eventos
-export const getAllEvents = async (req: Request, res: Response) => {
+// Criar evento
+export const createEvent = async (req: MulterRequest, res: Response) => {
   try {
-    const events = await EventsModel.findAll();
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar eventos." });
-  }
-};
+    const { name, date, location, description, organizer_id } = req.body;
+    let image_url = null;
 
-// Busca evento por ID
-export const getEventById = async (req: Request, res: Response) => {
-  try {
-    const event = await EventsModel.findByPk(req.params.id);
-    if (!event) {
-      return res.status(404).json({ error: "Evento não encontrado." });
-    }
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar evento." });
-  }
-};
-
-// Criação de evento (Apenas organizadores podem criar)
-export const createEvent = async (req: Request, res: Response) => {
-  try {
-    const { name, date, location, description } = req.body;
-    const organizer_id = (req as any).user.id;
-
-    if (!name || !date || !location || !description) {
-      return res
-        .status(400)
-        .json({ error: "Todos os campos são obrigatórios." });
-    }
-
-    let image_url = "";
     if (req.file) {
-      image_url = `/uploads/${req.file.filename}`; // ou outro caminho de acesso público
+      image_url = `/uploads/${req.file.filename}`;
     }
 
     const event = await EventsModel.create({
@@ -73,35 +48,64 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 };
 
-// Atualização de evento (Apenas organizador pode editar)
-export const updateEvent = async (req: Request, res: Response) => {
+// Listar todos os eventos
+export const getAllEvents = async (req: Request, res: Response) => {
+  try {
+    const events = await EventsModel.findAll();
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao listar eventos." });
+  }
+};
+
+// Buscar evento por ID
+export const getEventById = async (req: Request, res: Response) => {
   try {
     const event = await EventsModel.findByPk(req.params.id);
     if (!event) {
       return res.status(404).json({ error: "Evento não encontrado." });
     }
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar evento." });
+  }
+};
 
-    if (event.organizer_id !== (req as any).user.id) {
-      return res.status(403).json({ error: "Permissão negada." });
+// Atualizar evento
+export const updateEvent = async (req: MulterRequest, res: Response) => {
+  try {
+    const { name, date, location, description } = req.body;
+    let image_url = null;
+
+    if (req.file) {
+      image_url = `/uploads/${req.file.filename}`;
     }
 
-    await event.update(req.body);
+    const event = await EventsModel.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: "Evento não encontrado." });
+    }
+
+    await event.update({
+      name,
+      date,
+      location,
+      description,
+      image_url: image_url || event.image_url,
+    });
+
     res.json(event);
   } catch (error) {
     res.status(500).json({ error: "Erro ao atualizar evento." });
   }
 };
 
-// Deleta evento (Apenas organizador pode deletar)
+// Deletar evento
 export const deleteEvent = async (req: Request, res: Response) => {
   try {
     const event = await EventsModel.findByPk(req.params.id);
     if (!event) {
       return res.status(404).json({ error: "Evento não encontrado." });
-    }
-
-    if (event.organizer_id !== (req as any).user.id) {
-      return res.status(403).json({ error: "Permissão negada." });
     }
 
     await event.destroy();

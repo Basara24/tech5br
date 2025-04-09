@@ -37,7 +37,6 @@ UserModel.init(
     cpf: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     type: {
       type: DataTypes.ENUM("usuario", "organizador"),
@@ -50,7 +49,7 @@ UserModel.init(
     },
   },
   {
-    sequelize,  // Agora a instância do sequelize é passada corretamente
+    sequelize, // Agora a instância do sequelize é passada corretamente
     modelName: "UserModel",
     tableName: "users",
   }

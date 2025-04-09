@@ -1,15 +1,29 @@
 import { Model, DataTypes } from "sequelize";
-import sequelize from "../config/database"; // Instância do Sequelize
+import sequelize from "../config/database";
 import UserModel from "./UserModel"; // Importação do UserModel
 
-class EventsModel extends Model {
+interface EventAttributes {
+  id?: number;
+  name: string;
+  date: Date;
+  location: string;
+  description: string;
+  image_url: string | null;
+  organizer_id: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+class EventsModel extends Model<EventAttributes> implements EventAttributes {
   public id!: number;
   public name!: string;
-  public date!: string;
+  public date!: Date;
   public location!: string;
   public description!: string;
-  public image_url?: string;
+  public image_url!: string | null;
   public organizer_id!: number;
+  public readonly created_at!: Date;
+  public readonly updated_at!: Date;
 }
 
 EventsModel.init(
@@ -52,10 +66,15 @@ EventsModel.init(
   {
     sequelize,
     tableName: "events",
+    timestamps: true,
+    underscored: true,
   }
 );
 
 // Definindo a relação entre os modelos após a definição dos dois modelos
-EventsModel.belongsTo(UserModel, { foreignKey: "organizer_id", as: "organizer" });
+EventsModel.belongsTo(UserModel, {
+  foreignKey: "organizer_id",
+  as: "organizer",
+});
 
 export default EventsModel;
