@@ -1,123 +1,104 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { Button } from "../components/ui/button";
 
-export default function Register() {
+interface DecodedToken {
+  id: number;
+  type: string;
+  exp: number;
+}
+
+const SignaturePage: React.FC = () => {
+  const [userId, setUserId] = useState<number | null>(null);
+  const [plan, setPlan] = useState<"mensal" | "anual">("mensal");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    cpf: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [erro, setErro] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const validarEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  const validarCPF = (cpf: string) => {
-    const regex = /^\d{11}$/;
-    return regex.test(cpf);
-  };
-
-  const senhaForte = (senha: string) => senha.length >= 6;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErro("");
-
-    const { name, email, cpf, password, confirmPassword } = formData;
-
-    if (!name || !email || !cpf || !password || !confirmPassword) {
-      return setErro("Preencha todos os campos.");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Você precisa estar logado para assinar.");
+      navigate("/login");
+      return;
     }
 
-    if (!validarEmail(email)) return setErro("E-mail inválido.");
-    if (!validarCPF(cpf)) return setErro("CPF inválido. Use apenas números.");
-    if (!senhaForte(password))
-      return setErro("A senha deve ter pelo menos 6 caracteres.");
-    if (password !== confirmPassword)
-      return setErro("As senhas não coincidem.");
-
     try {
-      await axios.post("http://localhost:3000/users", {
-        name,
-        email,
-        cpf,
-        password,
-      });
-
+      const decoded = jwtDecode<DecodedToken>(token);
+      setUserId(decoded.id);
+    } catch (error) {
+      console.error("Erro ao decodificar token:", error);
+      alert("Sessão inválida. Faça login novamente.");
       navigate("/login");
-    } catch (err: any) {
-      if (axios.isAxiosError(err)) {
-        setErro(err.response?.data?.error || "Erro ao cadastrar.");
-      } else {
-        setErro("Erro inesperado.");
-      }
+    }
+  }, [navigate]);
+
+  const handleSubscribe = async () => {
+    if (!userId) return;
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+
+      // 1. Criar assinatura
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/signature`,
+        { user_id: userId, plan },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 2. Promover usuário
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/users/${userId}/subscribe`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Assinatura realizada com sucesso! Você agora é um organizador.");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Erro ao assinar:", error);
+      alert("Erro ao assinar. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">Cadastro</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-600 p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          La Vamos Nós 🚀
+        </h1>
+        <p className="text-gray-600 mb-6">
+          Assine um plano e torne-se <strong>organizador</strong> da plataforma.
+        </p>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Nome"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="cpf"
-          placeholder="CPF (apenas números)"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Senha"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirmar Senha"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition-colors"
+        <div className="mb-6 text-left">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Escolha seu plano:
+          </label>
+          <select
+            value={plan}
+            onChange={(e) => setPlan(e.target.value as "mensal" | "anual")}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          >
+            <option value="mensal">Mensal - R$ 19,90</option>
+            <option value="anual">Anual - R$ 199,90</option>
+          </select>
+        </div>
+
+        <Button
+          onClick={handleSubscribe}
+          disabled={loading}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl"
         >
-          Cadastrar
-        </button>
-      </form>
+          {loading ? "Processando..." : "Assinar agora"}
+        </Button>
+      </div>
     </div>
   );
-}
+};
+
+export default SignaturePage;
