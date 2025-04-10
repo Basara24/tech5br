@@ -2,10 +2,12 @@ import { Request, Response } from "express";
 import EventsModel from "../models/EventsModel";
 import { authenticateToken } from "../middlewares/authMiddleware";
 import { upload } from "../middlewares/uploadMiddleware";
+import jwt from "jsonwebtoken";
 
 // Estender a interface Request para incluir a propriedade file
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
+  user?: any;
 }
 
 // Upload de imagem para evento
@@ -26,8 +28,21 @@ export const uploadEventImage = async (req: MulterRequest, res: Response) => {
 // Criar evento
 export const createEvent = async (req: MulterRequest, res: Response) => {
   try {
-    const { name, date, location, description, organizer_id } = req.body;
+    const { name, date, location, description } = req.body;
     let image_url = null;
+
+    // Verifica se o usuário está autenticado
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "Token não fornecido" });
+    }
+
+    // Decodifica o token para obter o ID do organizador
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "segredoUltraSecreto123"
+    ) as { id: number };
+    const organizer_id = decoded.id;
 
     if (req.file) {
       image_url = `/uploads/${req.file.filename}`;
@@ -44,6 +59,7 @@ export const createEvent = async (req: MulterRequest, res: Response) => {
 
     res.status(201).json(event);
   } catch (error) {
+    console.error("Erro ao criar evento:", error);
     res.status(500).json({ error: "Erro ao criar evento." });
   }
 };
