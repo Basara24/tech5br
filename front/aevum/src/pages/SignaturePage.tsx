@@ -54,7 +54,7 @@ const SignaturePage: React.FC = () => {
       );
 
       alert("Assinatura realizada com sucesso! Você agora é um organizador.");
-      navigate("/dashboard");
+      navigate("/home");
     } catch (error) {
       console.error("Erro ao assinar:", error);
       alert("Erro ao assinar. Tente novamente.");

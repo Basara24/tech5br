@@ -152,12 +152,17 @@ export default function EventDetails() {
     minute: "2-digit",
   });
 
+  // Construir a URL completa da imagem
+  const imageUrl = event.image_url
+    ? `http://localhost:3000${event.image_url}`
+    : null;
+
   return (
     <div className="event-details-container">
       <div className="event-details-content">
-        {event.image_url && !imageError ? (
+        {imageUrl && !imageError ? (
           <img
-            src={event.image_url}
+            src={imageUrl}
             alt={event.name}
             className="event-details-image"
             onError={() => setImageError(true)}
@@ -235,7 +240,7 @@ export default function EventDetails() {
               <div className="event-details-organizer-info">
                 {event.organizer.avatar_url ? (
                   <img
-                    src={event.organizer.avatar_url}
+                    src={`http://localhost:3000${event.organizer.avatar_url}`}
                     alt={event.organizer.name}
                     className="event-details-organizer-avatar"
                     onError={(e) => {
