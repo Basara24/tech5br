@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes";
 import eventsRoutes from "./routes/EventsRoutes";
 import SignatureRouter from "./routes/SignatureRoutes";
 import RegistrationRouter from "./routes/ResgistrationRoutes";
+import path from "path";
 
 const cors = require("cors");
 const app = express();
@@ -21,6 +22,9 @@ app.use(
 );
 
 app.use(express.json());
+// Servir arquivos estáticos da pasta uploads
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
 app.use(userRoutes);
 app.use(eventsRoutes);
 app.use(SignatureRouter);

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import "./Register.css";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -57,10 +58,10 @@ export default function Register() {
         password,
       });
 
-      navigate("/");
+      navigate("/login");
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setErro(err.response?.data?.error || "Erro ao cadastrar.");
+        setErro(err.response?.data?.error || "Erro ao criar conta.");
       } else {
         setErro("Erro inesperado.");
       }
@@ -68,55 +69,99 @@ export default function Register() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">Cadastro</h2>
+    <div className="register-container">
+      <form className="register-form" onSubmit={handleSubmit}>
+        <h1 className="register-title">Criar Conta</h1>
+        <p className="register-subtitle">
+          Preencha os campos abaixo para se registrar
+        </p>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Nome"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="cpf"
-          placeholder="CPF (apenas números)"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Senha"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirmar Senha"
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition-colors"
-        >
-          Cadastrar
+        <div className="register-input-group">
+          <label htmlFor="name" className="register-label">
+            Nome
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            className="register-input"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Seu nome completo"
+          />
+        </div>
+
+        <div className="register-input-group">
+          <label htmlFor="email" className="register-label">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="register-input"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="seu@email.com"
+          />
+        </div>
+
+        <div className="register-input-group">
+          <label htmlFor="cpf" className="register-label">
+            CPF (apenas números)
+          </label>
+          <input
+            type="text"
+            id="cpf"
+            name="cpf"
+            className="register-input"
+            value={formData.cpf}
+            onChange={handleChange}
+            placeholder="Seu CPF"
+          />
+        </div>
+
+        <div className="register-input-group">
+          <label htmlFor="password" className="register-label">
+            Senha
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            className="register-input"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Sua senha"
+          />
+        </div>
+
+        <div className="register-input-group">
+          <label htmlFor="confirmPassword" className="register-label">
+            Confirmar Senha
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            className="register-input"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="Confirme sua senha"
+          />
+        </div>
+
+        {erro && <p className="register-error">{erro}</p>}
+
+        <button type="submit" className="register-button">
+          Criar Conta
         </button>
+
+        <div className="register-links">
+          <Link to="/login" className="register-link">
+            Já tem uma conta? Faça login
+          </Link>
+        </div>
       </form>
     </div>
   );

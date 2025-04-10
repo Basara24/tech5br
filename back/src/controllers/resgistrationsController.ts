@@ -8,7 +8,11 @@ class RegistrationsController {
   static async register(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const { eventId } = req.body;
+      const eventId = parseInt(req.params.id);
+
+      if (isNaN(eventId)) {
+        return res.status(400).json({ error: "ID do evento inválido." });
+      }
 
       // Verificar se o evento existe
       const event = await EventsModel.findByPk(eventId);
@@ -21,7 +25,9 @@ class RegistrationsController {
         where: { user_id: userId, event_id: eventId },
       });
       if (existingRegistration) {
-        return res.status(400).json({ error: "Usuário já inscrito neste evento." });
+        return res
+          .status(409)
+          .json({ error: "Usuário já inscrito neste evento." });
       }
 
       // Criar a inscrição
@@ -33,6 +39,7 @@ class RegistrationsController {
 
       return res.status(201).json(registration);
     } catch (error) {
+      console.error("Erro ao processar inscrição:", error);
       return res.status(500).json({ error: "Erro ao processar inscrição." });
     }
   }
@@ -41,7 +48,11 @@ class RegistrationsController {
   static async cancel(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const { eventId } = req.params;
+      const eventId = parseInt(req.params.id);
+
+      if (isNaN(eventId)) {
+        return res.status(400).json({ error: "ID do evento inválido." });
+      }
 
       // Verificar se a inscrição existe
       const registration = await RegistrationsModel.findOne({
@@ -54,8 +65,11 @@ class RegistrationsController {
       // Remover a inscrição
       await registration.destroy();
 
-      return res.status(200).json({ message: "Inscrição cancelada com sucesso." });
+      return res
+        .status(200)
+        .json({ message: "Inscrição cancelada com sucesso." });
     } catch (error) {
+      console.error("Erro ao cancelar inscrição:", error);
       return res.status(500).json({ error: "Erro ao cancelar inscrição." });
     }
   }
@@ -71,6 +85,7 @@ class RegistrationsController {
 
       return res.status(200).json(registrations);
     } catch (error) {
+      console.error("Erro ao listar inscrições:", error);
       return res.status(500).json({ error: "Erro ao listar inscrições." });
     }
   }

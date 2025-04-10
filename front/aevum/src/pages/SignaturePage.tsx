@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { Button } from "../components/ui/button";
+import "./SignaturePage.css";
 
 interface DecodedToken {
   id: number;
@@ -41,14 +41,12 @@ const SignaturePage: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // 1. Criar assinatura
       await axios.post(
         `${import.meta.env.VITE_API_URL}/signature`,
         { user_id: userId, plan },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 2. Promover usuário
       await axios.post(
         `${import.meta.env.VITE_API_URL}/users/${userId}/subscribe`,
         {},
@@ -66,36 +64,57 @@ const SignaturePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-600 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          La Vamos Nós 🚀
-        </h1>
-        <p className="text-gray-600 mb-6">
+    <div className="signature-container">
+      <div className="signature-card">
+        <h1 className="signature-title">La Vamos Nós 🚀</h1>
+        <p className="signature-subtitle">
           Assine um plano e torne-se <strong>organizador</strong> da plataforma.
+          Gerencie seus eventos com facilidade e alcance mais pessoas!
         </p>
 
-        <div className="mb-6 text-left">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Escolha seu plano:
-          </label>
+        <div className="signature-plan-group">
+          <label className="signature-label">Escolha seu plano:</label>
           <select
             value={plan}
             onChange={(e) => setPlan(e.target.value as "mensal" | "anual")}
-            className="w-full p-2 border border-gray-300 rounded-lg"
+            className="signature-select"
           >
             <option value="mensal">Mensal - R$ 19,90</option>
-            <option value="anual">Anual - R$ 199,90</option>
+            <option value="anual">Anual - R$ 199,90 (Economize 16%)</option>
           </select>
         </div>
 
-        <Button
+        <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl"
+          className="signature-button"
         >
           {loading ? "Processando..." : "Assinar agora"}
-        </Button>
+        </button>
+
+        <div className="signature-benefits">
+          <h3 className="signature-benefits-title">
+            Benefícios da assinatura:
+          </h3>
+          <ul className="signature-benefits-list">
+            <li className="signature-benefit-item">
+              <span className="signature-benefit-icon">✓</span>
+              Crie e gerencie eventos ilimitados
+            </li>
+            <li className="signature-benefit-item">
+              <span className="signature-benefit-icon">✓</span>
+              Dashboard personalizado
+            </li>
+            <li className="signature-benefit-item">
+              <span className="signature-benefit-icon">✓</span>
+              Relatórios detalhados
+            </li>
+            <li className="signature-benefit-item">
+              <span className="signature-benefit-icon">✓</span>
+              Suporte prioritário
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );

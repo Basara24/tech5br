@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./CreateEvent.css";
 
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function CreateEvent() {
   });
 
   const [erro, setErro] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -25,7 +27,14 @@ export default function CreateEvent() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setForm((prev) => ({ ...prev, image: file || null }));
+    if (file) {
+      setForm((prev) => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +52,7 @@ export default function CreateEvent() {
       formData.append("location", form.location);
 
       if (form.image) {
-        formData.append("image", form.image); // nome do campo deve bater com o backend
+        formData.append("image", form.image);
       }
 
       const response = await axios.post(
@@ -66,57 +75,100 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-md space-y-4"
-      >
-        <h2 className="text-2xl font-bold text-center">Criar Evento</h2>
+    <div className="create-event-container">
+      <form className="create-event-form" onSubmit={handleSubmit}>
+        <h1 className="create-event-title">Criar Evento</h1>
+        <p className="create-event-subtitle">
+          Preencha os detalhes do seu evento abaixo
+        </p>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Nome do Evento"
-          value={form.name}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <textarea
-          name="description"
-          placeholder="Descrição"
-          value={form.description}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="date"
-          name="date"
-          value={form.date}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="location"
-          placeholder="Local"
-          value={form.location}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
+        <div className="create-event-input-group">
+          <label htmlFor="name" className="create-event-label">
+            Nome do Evento
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            className="create-event-input"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Digite o nome do evento"
+            required
+          />
+        </div>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="w-full p-2 border rounded"
-        />
+        <div className="create-event-input-group">
+          <label htmlFor="description" className="create-event-label">
+            Descrição
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            className="create-event-textarea"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Descreva o seu evento"
+            required
+          />
+        </div>
 
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
+        <div className="create-event-input-group">
+          <label htmlFor="date" className="create-event-label">
+            Data
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            className="create-event-input"
+            value={form.date}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
-        >
+        <div className="create-event-input-group">
+          <label htmlFor="location" className="create-event-label">
+            Local
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            className="create-event-input"
+            value={form.location}
+            onChange={handleChange}
+            placeholder="Digite o local do evento"
+            required
+          />
+        </div>
+
+        <div className="create-event-input-group">
+          <label htmlFor="image" className="create-event-label">
+            Imagem do Evento
+          </label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            className="create-event-file-input"
+            onChange={handleFileChange}
+          />
+          {previewUrl && (
+            <div className="create-event-preview">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="create-event-preview-image"
+              />
+            </div>
+          )}
+        </div>
+
+        {erro && <p className="create-event-error">{erro}</p>}
+
+        <button type="submit" className="create-event-button">
           Criar Evento
         </button>
       </form>
